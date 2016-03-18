@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE hibernate-configuration PUBLIC
+	"-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+	"http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+	<session-factory>
+
+		<!-- Hibernate中SQL语句的方言，此处设置MySQL语句方言 -->
+		<property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+
+		<!-- 是否显示SQL语句 -->
+		<property name="hibernate.show_sql">true</property>
+
+		<!-- 是否格式化SQL语句，使其看起来更美观 -->
+		<property name="hibernate.format_sql">true</property>
+
+		<!-- 自动生成表的方式 -->
+		<property name="hibernate.hbm2ddl.auto">update</property>
+
+	</session-factory>
+</hibernate-configuration>

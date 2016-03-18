@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016-2-16 16:48:24 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping package="cn.farquer.survey.guest.entity">
+    <class name="Question" table="T_QUESTION">
+        <id name="questionId" type="java.lang.Integer">
+            <column name="QUESTION_ID" />
+            <generator class="native" />
+        </id>
+        
+        <many-to-one name="bag" class="Bag" column="BAG_ID" />
+        
+        <property name="questionName" type="java.lang.String">
+            <column name="QUESTION_NAME" />
+        </property>
+        <property name="questionType" type="int">
+            <column name="QUESTION_TYPE" />
+        </property>
+        <property name="options" type="java.lang.String">
+            <column name="OPTIONS" />
+        </property>
+        <property name="br" type="boolean">
+            <column name="BR" />
+        </property>
+        <property name="hasOther" type="boolean">
+            <column name="HAS_OTHER" />
+        </property>
+        <property name="otherType" type="int">
+            <column name="OTHER_TYPE" />
+        </property>
+        <property name="matrixRowTitles" type="java.lang.String">
+            <column name="MATRIX_ROW_TITLES" />
+        </property>
+        <property name="matrixColTitles" type="java.lang.String">
+            <column name="MATRIX_COL_TITLES" />
+        </property>
+        <property name="matrixOptions" type="java.lang.String">
+            <column name="MATRIX_OPTIONS" />
+        </property>
+    </class>
+</hibernate-mapping>

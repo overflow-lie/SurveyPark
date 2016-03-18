@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016-3-1 16:21:18 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping package="cn.farquer.survey.admin.entity">
+    <class name="Log" table="T_LOG">
+        <id name="logId" type="java.lang.Integer">
+            <column name="LOG_ID" />
+            <generator class="native" />
+        </id>
+        <property name="operator" type="java.lang.String">
+            <column name="OPERATOR" />
+        </property>
+        <property name="operateTime" type="java.lang.String">
+            <column name="OPERATE_TIME" />
+        </property>
+        <property name="methodType" type="java.lang.String">
+            <column name="METHOD_TYPE" />
+        </property>
+        <property name="methodName" type="java.lang.String" length="6000" >
+            <column name="METHOD_NAME" />
+        </property>
+        <property name="methodArgs" type="java.lang.String" length="6000" >
+            <column name="METHOD_ARGS" />
+        </property>
+        <property name="methodReturnValue" type="java.lang.String" length="6000" >
+            <column name="METHOD_RETURN_VALUE" />
+        </property>
+        <property name="methodResultMsg" type="java.lang.String" length="6000" >
+            <column name="METHOD_RESULT_MSG" />
+        </property>
+    </class>
+</hibernate-mapping>

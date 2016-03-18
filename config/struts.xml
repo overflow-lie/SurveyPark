@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+	"-//Apache Software Foundation//DTD Struts Configuration 2.3//EN"
+	"http://struts.apache.org/dtds/struts-2.3.dtd">
+
+<struts>
+
+	<!-- 在全局级别设置国际化资源文件的基名 -->
+	<constant name="struts.custom.i18n.resources" value="surveyI18N" />
+
+	<!-- 开启开发者模式 -->
+	<constant name="struts.devMode" value="false" />
+
+	<!-- 设置默认主题为simple -->
+	<constant name="struts.ui.theme" value="simple" />
+
+	 <package name="basePackage" namespace="/" extends="jfreechart-default,json-default">
+    	<interceptors>
+	    	<!-- 注册自定义拦截器类 -->
+    		<!-- <interceptor name="loginInterceptor" class="cn.farquer.survey.guest.component.interceptor.LoginInterceptor"/> -->
+    		<interceptor name="generateResInteceptor" class="cn.farquer.survey.admin.component.interceptor.GenerateResInteceptor"/>
+    		<interceptor name="vipInterceptor" class="cn.farquer.survey.admin.component.interceptor.VipInterceptor"/>
+    		<interceptor name="userAwareInterceptor" class="cn.farquer.survey.admin.component.interceptor.UserAwareInterceptor"/>
+    		<interceptor name="authorityInterceptor" class="cn.farquer.survey.admin.component.interceptor.AuthorityInterceptor"></interceptor>
+    		
+    		<interceptor-stack name="myStack">
+    			<!-- 引用自定义拦截器 -->
+    			<interceptor-ref name="generateResInteceptor"/>
+    			<interceptor-ref name="vipInterceptor"/>
+    			<interceptor-ref name="authorityInterceptor"/>
+    			<interceptor-ref name="userAwareInterceptor"/>
+    			<!-- <interceptor-ref name="loginInterceptor"/> -->
+    			<!-- 引用Struts2拦截器 -->
+    			<interceptor-ref name="paramsPrepareParamsStack">
+    				<!-- 修改某个拦截器参数 -->
+    				<!-- 设置prepare拦截器不要执行prepare()方法 -->
+    				<param name="prepare.alwaysInvokePrepare">false</param>
+    				<!-- 设置上传时单个文件大小限制 -->
+    				<param name="fileUpload.maximumSize">512000</param>
+    				<!-- 设置上传时文件格式限制 -->
+    				<param name="fileUpload.allowedTypes">image/jpeg,image/gif,image/png</param>
+    			</interceptor-ref>
+    		</interceptor-stack>
+    	</interceptors>
+    	
+    	<!-- 引用当前自定义拦截器栈 -->
+    	<default-interceptor-ref name="myStack"/>
+    	
+	 	<!-- 设定全局result -->
+	 	<global-results>
+	 		<!-- 在任何一个Action中发现未登陆问题，都可以执行这个result -->
+	 		<result name="loginError">/guestPages/user_login.jsp</result>
+	 		<result name="toAdminLoginPage">/adminPages/admin_login.jsp</result>
+			<result name="toVipPage">/guestPages/user_vip.jsp</result>
+    		<result name="toSurveyDesignAction" 
+    				type="redirectAction">SurveyAction_design?surveyId=${surveyId}</result>
+    		<result name="globalErrMsg">/global_msg.jsp</result>
+    		<result name="toTop10Action" type="redirectAction">SurveyAction_top10</result>
+    		<result name="input" >/global_msg.jsp</result>
+	 	</global-results>
+	 	
+	 	<!-- 配置声明式异常 -->
+	 	<!-- 声明式/编程式 -->
+	 	<global-exception-mappings>
+	 		<!-- 删除有关联关系的调查抛出的异常 -->
+	 		<exception-mapping result="globalErrMsg" exception="cn.farquer.survey.exception.CascadDelSurveyException"/>
+	 		<!-- 删除有关联关系的包裹抛出的异常 -->
+	 		<exception-mapping result="globalErrMsg" exception="cn.farquer.survey.exception.CascadDelBagException"/>
+	 	</global-exception-mappings>
+   	</package>
+
+
+	<!-- 处理后台管理员用户请求的名称空间 -->
+	 <package name="adminPackage" namespace="/Admin" extends="basePackage">
+	 
+	 	<!-- 日志操作的Action -->
+		<action name="LogAction_*" class="logAction" method="{1}">
+    		<result name="toShowLogsPage">/adminPages/log_list.jsp</result>
+    		<result name="toDownloadLogsPage">/adminPages/log_download.jsp</result>
+    		<!-- 下载Excel文件，需要类型为stream -->
+    		<result name="exportLog" type="stream">
+    			<param name="contentDisposition">attachment;filename=${fileName}</param>
+    			<param name="contentType">application/vnd.ms-excel</param>
+    		</result>
+		</action>
+    
+    	<!-- 管理角色的Action -->
+    	<action name="RoleAction_*" class="roleAction" method="{1}">
+    		<result name="toCreatePage">/adminPages/role_add.jsp</result>
+    		<result name="toShowRolesAction" type="redirectAction">RoleAction_showRoles</result>
+    		<!-- 前台更新角色名称使用的是AJAX,所以需要类型是json，还需要message方法 -->
+    		<result name="updateSuccess" type="json">
+    			<param name="root">message</param>
+    		</result>
+    		<result name="toShowRolesPage">/adminPages/role_list.jsp</result>
+    		<result name="toAuthMngPage">/adminPages/role_mng.jsp</result>
+    	</action>
+    
+    	<!-- 管理权限的Action -->
+    	<action name="AuthorityAction_*" class="authorityAction" method="{1}">
+    		<result name="toAllAuthorityPage">/adminPages/auth_list.jsp</result>
+    		<result name="toAllAuthorityAction" type="redirectAction">AuthorityAction_showAuthorities</result>
+    		<!-- 前台更新权限名称使用的是AJAX,所以需要类型是json，还需要message方法 -->
+    		<result name="updateSuccess" type="json">
+    			<param name="root">message</param>
+    		</result>
+    		<result name="toCreatePage">/adminPages/auth_add.jsp</result>
+    		<result name="toResMngPage">/adminPages/auth_mng.jsp</result>
+    	</action>
+    
+    	<!-- 管理资源的Action -->
+    	<action name="ResourceAction_*" class="resourceAction" method="{1}">
+    		<result name="toAllResourcesPage">/adminPages/res_list.jsp</result>
+    		<result name="toAllResourcesAction" type="redirectAction">ResourceAction_showAllResources</result>
+    		<!-- 前台更新资源汉译使用的是AJAX,所以需要类型是json，还需要message方法 -->
+    		<result name="updateSuccess" type="json">
+    			<param name="root">message</param>
+    		</result>
+    	</action>
+    
+    	<!-- 查看并且声明Excel报表的Action -->
+    	<action name="ExcelAction_*" class="excelAction" method="{1}">
+    		<result name="toAllSurveyPage">/adminPages/excel_list.jsp</result>
+    		<!-- 下载Excel文件，需要类型为stream -->
+    		<result name="exportExcel" type="stream">
+    			<param name="contentDisposition">attachment;filename=${fileName}</param>
+    			<param name="contentType">application/vnd.ms-excel</param>
+    		</result>
+    	</action>
+		
+		<!-- 管理员基本操作的Action -->
+		<action name="AdminAction_*" class="adminAction" method="{1}">
+			<result name="toAdminMainPage">/adminPages/admin_main.jsp</result>
+			<result name="toAdminLoginPage">/adminPages/admin_login.jsp</result>
+			<result name="toAdminMainAction" type="redirectAction">AdminAction_toAdminMain</result>
+			<result name="toNewAdminsPage">/adminPages/admin_new_list.jsp</result>
+			<result name="toAdminsPage">/adminPages/admin_list.jsp</result>
+			<result name="toRoleMngPage">/adminPages/admin_mng.jsp</result>
+			<result name="toAdminListAction" type="redirectAction">AdminAction_showAdmins</result>
+			<result name="toCalculationCodeSuccessPage" type="json">
+    			<param name="root">message</param>
+    		</result>
+		</action>
+		
+    </package>
+
+
+	<!-- 处理前台普通用户请求的名称空间 -->
+	<package name="guestPackage" namespace="/Guest" extends="basePackage">
+
+		<!-- 跳转页面的action，通配符匹配jsp页面的文件名，例如：ToPageAction_user_myCenter -->
+		<action name="ToPageAction_*">
+			<result>/guestPages/{1}.jsp</result>
+		</action>
+
+		<!-- 统计图标的Action -->
+		<action name="StatisticsAction_*" class="statisticsAction"	method="{1}">
+			<!-- 图标的类型，需要设置图片的大小 -->
+			<result name="toChartResult" type="chart">
+				<param name="width">${width}</param>
+				<param name="height">${height}</param>
+			</result>
+			<result name="toSummaryPage">/guestPages/survey_summary.jsp</result>
+			<result name="toTextListPage">/guestPages/statistics_text.jsp</result>
+			<result name="toNormalMatrixPage">/guestPages/statistics_normalMatrix.jsp</result>
+			<result name="toOptionMatrixPage">/guestPages/statistics_optionMatrix.jsp</result>
+
+		</action>
+
+		<!-- 用于与调查关联关系，参加调查的Action -->
+		<action name="EngageAction_*" class="engageAction" method="{1}">
+			<result name="toEngagePage">/guestPages/engage_engage.jsp</result>
+			<result name="toEngageSuccessPage">/guestPages/engage_success.jsp</result>
+		</action>
+
+		<!-- 问题的Action -->
+		<action name="QuestionAction_*" class="questionAction" method="{1}">
+			<result name="toTypeChoosenPage">/guestPages/question_typeChoosen.jsp</result>
+			<result name="toQuestionDesignPage">/guestPages/question_design.jsp</result>
+		</action>
+
+		<!-- 包裹的Action -->
+		<action name="BagAction_*" class="bagAction" method="{1}">
+			<!-- 临时做法：<result name="saveSuccess">/guestPages/survey_TEMP.jsp</result> -->
+			<result name="toEditPage">/guestPages/bag_edit.jsp</result>
+			<result name="toMoveCopyPage">/guestPages/bag_moveOrCope.jsp</result>
+		</action>
+
+		<!-- 调查的Action -->
+		<action name="SurveyAction_*" class="surveyAction" method="{1}">
+			<result name="toMyUncompletedAction" type="redirectAction">SurveyAction_myUncompleted
+			</result>
+			<!-- 固话写死的input值不能同时满足save和update的要求 -->
+			<result name="input">${inputPath}</result>
+			<result name="toUncompletedListPage">/guestPages/survey_uncompletedListPage.jsp
+			</result>
+			<result name="toCompletedSurveyList">/guestPages/survey_completedListPage.jsp</result>
+			<result name="toEditSurveyPage">/guestPages/survey_edit.jsp</result>
+			<result name="toDesignPage">/guestPages/survey_design.jsp</result>
+			<result name="toSurveyMessagePage">/guestPages/survey_message.jsp</result>
+			<result name="toAdjustBagOrderPage">/guestPages/survey_adjust_bag_order.jsp</result>
+			<result name="toTop10Page">/guestPages/survey_top10.jsp</result>
+			<result name="toAllAvailableSurveyPage">/guestPages/survey_allAvailableSurvey.jsp
+			</result>
+			<result name="toMyEngagedSurvey">/guestPages/user_myEngagedList.jsp</result>
+		</action>
+
+		<!-- 用户的Action -->
+		<action name="UserAction_*" class="userAction" method="{1}">
+			<result name="registSuccess">/guestPages/user_login.jsp</result>
+			<result name="registError">/guestPages/user_regist.jsp</result>
+			<result name="toPayPage">/guestPages/user_pay.jsp</result>
+			<result name="loginSuccess">/index.jsp</result>
+			<result name="logoutSuccess">/index.jsp</result>
+			<result name="toMyCenterPage">/guestPages/user_myCenter.jsp</result>
+		</action>
+
+	</package>
+
+
+
+</struts>

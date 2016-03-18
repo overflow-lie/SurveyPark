@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016-2-22 11:00:13 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="cn.farquer.survey.guest.entity.Answer" table="T_ANSWER">
+        <id name="answerId" type="java.lang.Integer">
+            <column name="ANSWER_ID" />
+            <generator class="native" />
+        </id>
+        <property name="questionId" type="java.lang.Integer">
+            <column name="QUESTION_ID" />
+        </property>
+        <property name="surveyId" type="java.lang.Integer">
+            <column name="SURVEY_ID" />
+        </property>
+        <property name="answerTime" type="timestamp">
+            <column name="ANSWER_TIME" />
+        </property>
+        <property name="uuid" type="java.lang.String">
+            <column name="UUID" />
+        </property>
+        <property name="mainAnswers" type="java.lang.String">
+            <column name="MAIN_ANSWERS" />
+        </property>
+        <property name="otherAnswers" type="java.lang.String">
+            <column name="OTHER_ANSWERS" />
+        </property>
+    </class>
+</hibernate-mapping>

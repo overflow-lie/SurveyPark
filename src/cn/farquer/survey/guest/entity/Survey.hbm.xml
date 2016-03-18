@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016-1-30 16:09:38 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping package="cn.farquer.survey.guest.entity">
+	<class name="Survey" table="T_SURVEY">
+		<id name="surveyId" type="java.lang.Integer">
+			<column name="SURVEY_ID" />
+			<generator class="native" />
+		</id>
+		<property name="title" type="java.lang.String">
+			<column name="TITLE" />
+		</property>
+		<property name="logoPath" type="java.lang.String">
+			<column name="LOGO_PATH" />
+		</property>
+		<property name="completed" type="boolean" column="COMPLETED" />
+		<property name="completedTime" column="COMPLETED_TIME" type="timestamp" />
+
+		<!-- 映射多对一关联关系 -->
+		<many-to-one name="user" class="User" fetch="join" column="USER_ID" />
+
+		<!-- 映射双向多对一关联关系 -->
+		<!-- name属性：当前Survey类中关联Bag类的属性名 -->
+		<!-- table属性：Bag类对应的表 -->
+		<!-- inverse属性：设置为true，表示放弃维护关联关系，由对方维护 -->
+		<set name="bagSet" table="T_BAG" inverse="true" fetch="join"
+			order-by="BAG_ORDER">
+			<!-- 指定在BAGS表中关联SURVEYS表的外键列的列名 -->
+			<key column="SURVEY_ID" />
+			<!-- Bag类名 -->
+			<one-to-many class="Bag" />
+		</set>
+
+		<property name="minOrder" type="integer"
+			formula="(SELECT MIN(b.bag_order) FROM t_bag b WHERE b.survey_id=SURVEY_ID)" />
+		<property name="maxOrder" type="integer"
+			formula="(SELECT MAX(b.bag_order) FROM t_bag b WHERE b.survey_id=SURVEY_ID)" />
+
+	</class>
+</hibernate-mapping>

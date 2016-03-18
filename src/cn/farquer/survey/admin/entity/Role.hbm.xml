@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016-2-29 16:29:44 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping package="cn.farquer.survey.admin.entity">
+	<class name="Role" table="T_ROLE">
+		<id name="roleId" type="java.lang.Integer">
+			<column name="ROLE_ID" />
+			<generator class="native" />
+		</id>
+		<property name="roleName" type="java.lang.String">
+			<column name="ROLE_NAME" />
+		</property>
+		<set name="authorities" table="T_ROLE_AUTH_INNER" fetch="join">
+			<key column="role_id" />
+			<many-to-many class="Authority" column="auth_id" />
+		</set>
+	</class>
+</hibernate-mapping>

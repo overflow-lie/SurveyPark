@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:cache="http://www.springframework.org/schema/cache"
+	xsi:schemaLocation="http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+	<!-- 自动扫描组件，使用注解方式声明组件时，配置扫描的包 -->
+	<context:component-scan base-package="cn.farquer.survey.*.component.*" />
+
+	<!-- 使用Spring的声明式事务处理，配置自动声称代理 -->
+	<aop:aspectj-autoproxy />
+
+	<!-- 声明外部资源，jdbc.properties中保存了数据库信息 -->
+	<context:property-placeholder location="classpath:jdbc.properties" />
+
+	<!-- 配置了主datasource数据源，信息从jdbc.properties中获取，此处使用了c3p0连接池  -->
+<!--<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="jdbcUrl" value="${jdbc.jdbcUrl}"></property>
+		<property name="driverClass" value="${jdbc.driverClass}"></property>
+		<property name="user" value="${jdbc.user}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+		<property name="initialPoolSize" value="${jdbc.initPoolSize}"></property>
+		<property name="maxPoolSize" value="${jdbc.maxPoolSize}"></property>
+		<property name="minPoolSize" value="${jdbc.minPoolSize}"></property>
+	</bean>
+-->
+
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="jdbcUrl" value="${jdbc.jdbcUrl}"></property>
+		<property name="driverClass" value="${jdbc.driverClass}"></property>
+		<property name="user" value="${jdbc.user}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+		<property name="initialPoolSize" value="${jdbc.initPoolSize}"></property>
+		<property name="maxPoolSize" value="${jdbc.maxPoolSize}"></property>
+		<property name="minPoolSize" value="${jdbc.minPoolSize}"></property>
+	</bean>
+
+	
+	<!-- 配置SessionFactory，通过注入数据源方式获得Session工厂，配置mappingLocations属性自动扫描Hibernate的xxx.hbm.xml实体类配置文件，在hibernate.cfg.xml中无需配置 -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="configLocation" value="classpath:hibernate.cfg.xml"></property>
+		<property name="mappingLocations" value="classpath:cn/farquer/survey/*/entity/*.hbm.xml"/>
+	</bean>
+
+	<!-- 事务处理，需要注入SessionFactory -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory"></property>
+	</bean>
+
+	<!-- 事务处理，声明使用注解方式 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	
+	<!-- 6.以基于XML的方式配置日志切面的bean -->
+	<bean id="logAspect" class="cn.farquer.survey.admin.advisor.LogAspect" autowire="byType"/>
+	
+	<!-- 7.以基于XML的方式配置日志切面 -->
+	<aop:config>
+		<!-- 配置日志切面 -->
+		<aop:aspect ref="logAspect" order="0">
+			
+			<!-- 声明切入点表达式,需要取消切面，否则会进入死循环 -->
+			<aop:pointcut expression="(execution(* *..*Service.save*(..)) || 
+									  execution(* *..*Service.update*(..)) || 
+									  execution(* *..*Service.delete*(..)) || 
+									  execution(* *..*Service.remove*(..)) || 
+									  execution(* *..*Service.copy*(..)) || 
+									  execution(* *..*Service.move*(..)) || 
+									  execution(* *..*Service.parse*(..)) || 
+									  execution(* *..*Service.calculate*(..))) and !bean(logServiceImpl)" id="logPointCut"/>
+			
+			<!-- 指定环绕通知的通知方法 -->
+			<aop:around pointcut-ref="logPointCut" method="record"/>
+		</aop:aspect>
+	</aop:config>
+	
+	<!-- 配置石英任务bean细节 -->
+	<bean id="jobDetailBean" class="org.springframework.scheduling.quartz.JobDetailBean">
+		<property name="jobClass" value="cn.farquer.survey.admin.scheduler.LogScheduler"/>
+		<property name="jobDataMap">
+			<map>
+				<entry key="logService" value-ref="logServiceImpl"/>
+			</map>
+		</property>
+	</bean>
+	
+	<!-- 配置触发器 -->
+	<bean id="cronTriggerBean" class="org.springframework.scheduling.quartz.CronTriggerBean">
+		<property name="jobDetail" ref="jobDetailBean"/>
+		<!-- 适合的配置：0 0 0 15 * ? ，表示每个月15日的0时0分0秒执行  -->
+		<property name="cronExpression" value="0 0 0 15 * ?"/>
+	</bean>
+	
+	<!-- 配置启动石英任务的工厂bean -->
+	<bean id="factoryBean" class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+		<property name="triggers">
+			<list>
+				<ref bean="cronTriggerBean"/>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- 配置Spring监听器 -->
+	<bean id="logInitListener" class="cn.farquer.survey.admin.listener.LogInitListener" autowire="byType"/>
+	
+	<!-- 配置EHCache缓存 -->
+	<!-- 1.配置EHCache工厂Bean -->
+	<bean id="ehcache" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean" p:config-location="classpath:ehcache.xml"/>
+	
+	<!-- 2.配置缓存管理器bean -->
+	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheCacheManager" p:cache-manager-ref="ehcache"/>
+
+	<!-- 3.配置自定义KeyGenerator -->
+	<bean id="surveyKeyGenerator" class="cn.farquer.survey.cache.SurveyKeyGenerator"/>
+	
+	<!-- 4.配置缓存通知 -->
+	<cache:advice id="surveyCacheAdvice" key-generator="surveyKeyGenerator" cache-manager="cacheManager">
+		<cache:caching cache="surveyCache">
+			<cache:cacheable method="get*"/>
+			<cache:cacheable method="find*"/>
+			
+			<cache:cache-evict method="save*" all-entries="true"/>
+			<cache:cache-evict method="update*" all-entries="true"/>
+			<cache:cache-evict method="delete*" all-entries="true"/>
+			<cache:cache-evict method="remove*" all-entries="true"/>
+			<cache:cache-evict method="*Mng" all-entries="true"/>
+			<cache:cache-evict method="remove*" all-entries="true"/>
+			<cache:cache-evict method="batch*" all-entries="true"/>
+			<cache:cache-evict method="parse*" all-entries="true"/>
+			<cache:cache-evict method="calculate*" all-entries="true"/>
+			
+		</cache:caching>
+	</cache:advice>
+	
+	<!-- 5.配置为缓存通知定义的切入点表达式 -->
+	<aop:config>
+	    <aop:advisor advice-ref="surveyCacheAdvice" pointcut="execution(* *..*Service.*(..))" order="0"/>
+	</aop:config>
+	
+	
+</beans>

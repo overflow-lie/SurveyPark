@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated 2016-1-29 9:04:25 by Hibernate Tools 3.4.0.CR1 -->
+<hibernate-mapping>
+    <class name="cn.farquer.survey.guest.entity.User" table="T_USER">
+        <id name="userId" type="java.lang.Integer">
+            <column name="USER_ID" />
+            <generator class="native" />
+        </id>
+        <property name="userName" type="java.lang.String">
+            <column name="USER_NAME" />
+        </property>
+        <property name="userPwd" type="java.lang.String">
+            <column name="USER_PWD" />
+        </property>
+        <property name="nickName" type="java.lang.String">
+            <column name="NICK_NAME" />
+        </property>
+        <property name="balance" type="int">
+            <column name="BALANCE" />
+        </property>
+        <property name="payStatus" type="boolean">
+            <column name="PAY_STATUS" />
+        </property>
+        <property name="endTime" type="long">
+            <column name="END_TIME" />
+        </property>
+        <property name="email" type="java.lang.String">
+            <column name="EMAIL" />
+        </property>
+        <property name="resCode" type="string" column="RES_CODE"/>
+        
+        <set name="roles" table="T_USER_ROLE_INNER" cascade="save-update" fetch="join">
+        	<key column="USER_ID"/>
+        	<many-to-many column="ROLE_ID" class="cn.farquer.survey.admin.entity.Role"></many-to-many>
+        </set>
+    </class>
+</hibernate-mapping>
